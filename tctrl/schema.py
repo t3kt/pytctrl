@@ -1,6 +1,6 @@
 from enum import Enum
 import json
-
+from tctrl.util import FillToLength
 
 class ParamType(Enum):
 	other = 1
@@ -333,11 +333,11 @@ class VectorParamSpec(ParamSpec):
 	def _ReadProperties(self, obj):
 		super()._ReadProperties(obj)
 		self.length = obj['length']
-		self.defaultval = _FillToLength(obj.get('default'), self.length)
-		self.minlimit = _FillToLength(obj.get('minLimit'), self.length)
-		self.maxlimit = _FillToLength(obj.get('maxLimit'), self.length)
-		self.minnorm = _FillToLength(obj.get('minNorm'), self.length)
-		self.maxnorm = _FillToLength(obj.get('maxNorm'), self.length)
+		self.defaultval = FillToLength(obj.get('default'), self.length)
+		self.minlimit = FillToLength(obj.get('minLimit'), self.length)
+		self.maxlimit = FillToLength(obj.get('maxLimit'), self.length)
+		self.minnorm = FillToLength(obj.get('minNorm'), self.length)
+		self.maxnorm = FillToLength(obj.get('maxNorm'), self.length)
 
 	@property
 	def _JsonDict(self):
@@ -350,19 +350,6 @@ class VectorParamSpec(ParamSpec):
 			'maxNorm': self.maxnorm,
 		}))
 		return obj
-
-def _FillToLength(vals, length=None):
-	length = length or 1
-	if vals is None or len(vals) == 0:
-		return [None] * length
-	if not isinstance(vals, list):
-		return [vals] * length
-	if len(vals) >= length:
-		return vals[:length]
-	return [
-		vals[i if i < len(vals) else -1]
-		for i in range(length)
-	]
 
 
 class ModuleSpec(SpecNode):

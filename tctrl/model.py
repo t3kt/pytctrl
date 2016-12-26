@@ -27,10 +27,8 @@ class ParamModel(ModelNode):
 		self.app = parent.app
 		self.spec = spec
 		self.parent = parent
-
-	@property
-	def label(self):
-		return self.spec.label
+		self.label = spec.label
+		self.ptype = spec.ptype
 
 	@property
 	def value(self):
