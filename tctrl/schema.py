@@ -113,6 +113,9 @@ class ParamSpec(SpecNode):
 		}))
 		return obj
 
+	def __repr__(self):
+		return '%s(%r)' % (type(self).__name__, self._JsonDict)
+
 def ParamWithType(
 		key,
 		ptype,
@@ -362,7 +365,7 @@ def _FillToLength(vals, length=None):
 	]
 
 
-class ModuleSpec:
+class ModuleSpec(SpecNode):
 	def __init__(
 			self,
 			key,
@@ -372,25 +375,34 @@ class ModuleSpec:
 			tags=None,
 			params=None,
 			children=None):
-		self.key = key
-		self.label = label
+		super().__init__(
+			key,
+			label=label,
+			tags=tags)
 		self.moduletype = moduletype
 		self.group = group
-		self.tags = tags
 		self.params = params
 		self.children = children
 
 	@property
 	def _JsonDict(self):
-		return _CleanDict({
-			'key': self.key,
-			'label': self.label,
+		obj = super()._JsonDict
+		obj.update(_CleanDict({
 			'moduleType': self.moduletype,
 			'group': self.group,
-			'tags': self.tags,
 			'params': [c._JsonDict for c in self.params] if self.params else None,
 			'children': [c._JsonDict for c in self.children] if self.children else None,
-		})
+		}))
+		return obj
+
+	def _ReadProperties(self, obj):
+		super()._ReadProperties(obj)
+		self.moduletype = obj.get('moduleType')
+		self.group = obj.get('group')
+		paramobjs = obj.get('params')
+		childobjs = obj.get('children')
+		self.params = [ParamFromObj(o) for o in paramobjs] if paramobjs else None
+		self.children = [ModuleFromObj(o) for o in childobjs] if childobjs else None
 
 	def __repr__(self):
 		return 'ModuleSpec(%r)' % self._JsonDict
@@ -398,22 +410,35 @@ class ModuleSpec:
 	def ToJson(self):
 		return json.dumps(self._JsonDict)
 
+def ModuleFromObj(obj):
+	key = obj['key']
+	module = ModuleSpec(key)
+	module._ReadProperties(obj)
+	return module
 
-class AppSchema:
-	def __init__(self, key, label=None, description=None, children=None):
-		self.key = key
-		self.label = label
+class AppSchema(SpecNode):
+	def __init__(self, key, label=None, tags=None, description=None, children=None):
+		super().__init__(
+			key,
+			label=label,
+			tags=tags)
 		self.description = description
 		self.children = children or []
 
 	@property
 	def _JsonDict(self):
-		return _CleanDict({
-			'key': self.key,
-			'label': self.label,
+		obj = super()._JsonDict
+		obj.update(_CleanDict({
 			'description': self.description,
-			'children': [c._JsonDict for c in self.children],
-		})
+			'children': [c._JsonDict for c in self.children] if self.children else None,
+		}))
+		return obj
+
+	def _ReadProperties(self, obj):
+		super()._ReadProperties(obj)
+		self.description = obj.get('description')
+		childobjs = obj.get('children')
+		self.children = [ModuleFromObj(o) for o in childobjs] if childobjs else None
 
 	def __repr__(self):
 		return 'AppSchema(%r)' % self._JsonDict
@@ -421,6 +446,10 @@ class AppSchema:
 	def ToJson(self):
 		return json.dumps(self._JsonDict)
 
+def AppFromObj(obj):
+	app = AppSchema(obj['key'])
+	app._ReadProperties(obj)
+	return app
 
 def _CleanDict(d):
 	for k in list(d.keys()):
