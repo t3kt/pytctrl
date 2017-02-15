@@ -12,7 +12,21 @@ class ParamType(Enum):
 	fvec = 8
 	menu = 10
 	trigger = 11
-s
+
+
+class ParseException(Exception):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+
+def _ParseParamType(str):
+	if not str:
+		return None
+	str = str.lower()
+	for t in ParamType:
+		if t.name == str:
+			return t
+	return None
 
 
 class _BaseSchemaNode:
