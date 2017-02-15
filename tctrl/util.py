@@ -12,3 +12,25 @@ def FillToLength(vals, length=None):
 		vals[i if i < len(vals) else -1]
 		for i in range(length)
 	]
+
+def CleanDict(d):
+	for k in list(d.keys()):
+		if d[k] is None or d[k] == '':
+			del d[k]
+	return d
+
+def MergeDicts(*parts):
+	if parts is None:
+		return {}
+	d = {}
+	for part in parts:
+		if part:
+			d.update(part)
+	return d
+
+def GetByKey(items, key):
+	if not items:
+		return None
+	for item in items:
+		if item.key == key:
+			return item

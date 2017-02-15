@@ -1,6 +1,6 @@
 from enum import Enum
 import json
-from tctrl.util import FillToLength
+from tctrl.util import CleanDict, MergeDicts, GetByKey
 
 class ParamType(Enum):
 	other = 1
@@ -13,22 +13,6 @@ class ParamType(Enum):
 	menu = 10
 	trigger = 11
 
-
-class ParseException(Exception):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-
-
-def _ParseParamType(str):
-	if not str:
-		return None
-	str = str.lower()
-	for t in ParamType:
-		if t.name == str:
-			return t
-	return None
-
-
 class _BaseSchemaNode:
 	@property
 	def JsonDict(self):
@@ -40,7 +24,6 @@ class _BaseSchemaNode:
 	def __repr__(self):
 		return '%s(%r)' % (self.__class__.__name__, self.JsonDict)
 
-
 class ParamOption(_BaseSchemaNode):
 	def __init__(self, key, label):
 		self.key = key
@@ -50,292 +33,85 @@ class ParamOption(_BaseSchemaNode):
 	def JsonDict(self):
 		return {'key': self.key, 'label': self.label}
 
-def _OptionFromObj(obj):
-	if not obj:
-		raise ParseException('Invalid ParamOption: %r' % obj)
-	if isinstance(obj, str):
-		return ParamOption(obj, obj)
-	if isinstance(obj, dict):
-		return ParamOption(key=obj['key'], label=obj.get('label'))
-	raise ParseException('Invalid ParamOption: %r' % obj)
-
-
-def _OptionsFromObj(obj):
-	if isinstance(obj, list):
-		return [_OptionFromObj(o) for o in obj]
-	return None
-
-
 class ParamSpec(_BaseSchemaNode):
 	def __init__(
 			self,
 			key,
-			ptype,
 			label=None,
-			tags=None,
+			ptype=ParamType.other,
+			othertype=None,
+			minlimit=None,
+			maxlimit=None,
+			minnorm=None,
+			maxnorm=None,
+			defaultval=None,
+			length=None,
 			style=None,
-			group=None):
+			group=None,
+			options=None,
+			tags=None,
+			properties=None):
 		self.key = key
 		self.label = label
 		self.ptype = ptype
+		self.othertype = othertype
+		self.minlimit = minlimit
+		self.maxlimit = maxlimit
+		self.minnorm = minnorm
+		self.maxnorm = maxnorm
+		self.defaultval = defaultval
+		self.length = length
 		self.style = style
 		self.group = group
+		self.options = options
 		self.tags = tags
-
-	def _ReadProperties(self, obj):
-		self.label = obj.get('label')
-		self.style = obj.get('style')
-		self.group = obj.get('group')
-		self.tags = obj.get('tags')
-
-	@property
-	def JsonDict(self):
-		return _CleanDict({
-			'key': self.key,
-			'label': self.label,
-			'tags': self.tags,
-			'type': self.ptype.name,
-			'style': self.style,
-			'group': self.group,
-		})
-
-def ParamWithType(
-		key,
-		ptype,
-		length=1):
-	if ptype == ParamType.bool:
-		return BoolParamSpec(key)
-	elif ptype in [ParamType.string, ParamType.menu]:
-		return MenuOrStringParamSpec(key, ptype)
-	elif ptype in [ParamType.int, ParamType.float]:
-		if length is None or length == 1:
-			return NumberParamSpec(key, ptype)
-		return VectorParamSpec(key, ptype, length=length)
-	elif ptype in [ParamType.ivec, ParamType.fvec]:
-		return VectorParamSpec(key, ptype, length=length)
-	elif ptype == ParamType.trigger:
-		return ParamSpec(key, ptype)
-	elif ptype == ParamType.other:
-		return OtherParamSpec(key)
-	else:
-		return None
-
-def ParamFromObj(obj):
-	key = obj['key']
-	typestr = obj['type']
-	ptype = _ParseParamType(typestr)
-	if ptype is None:
-		param = OtherParamSpec(key, othertype=typestr)
-	else:
-		param = ParamWithType(key, ptype, length=obj.get('length'))
-	param._ReadProperties(obj)
-	return param
-
-class OtherParamSpec(ParamSpec):
-	def __init__(
-			self,
-			key,
-			label=None,
-			tags=None,
-			style=None,
-			group=None,
-			othertype=None,
-			properties=None):
-		super().__init__(
-			key,
-			ParamType.other,
-			label=label,
-			tags=tags,
-			style=style,
-			group=group)
-		self.othertype = othertype
 		self.properties = properties
 
-	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
-		if 'otherType' in obj:
-			self.othertype = obj['otherType']
-		self.properties = {}
-		for key, val in obj:
-			if key not in ['key', 'type', 'otherType', 'style', 'group', '']:
-				self.properties[key] = val
-
 	@property
 	def JsonDict(self):
-		return _MergeDicts(
-			super().JsonDict,
-			_CleanDict({
+		return MergeDicts(
+			CleanDict(self.properties),
+			CleanDict({
+				'key': self.key,
+				'label': self.label,
+				'type': self.ptype.name,
 				'otherType': self.othertype,
-			}),
-			_CleanDict(self.properties))
-
-
-class MenuOrStringParamSpec(ParamSpec):
-	def __init__(
-			self,
-			key,
-			ptype,
-			label=None,
-			tags=None,
-			style=None,
-			group=None,
-			defaultval=None,
-			options=None):
-		super().__init__(
-			key,
-			ptype,
-			label=label,
-			tags=tags,
-			style=style,
-			group=group)
-		self.defaultval = defaultval
-		self.options = options
-
-	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
-		self.defaultval = obj.get('default')
-		self.options = _OptionsFromObj(obj.get('options'))
-
-	@property
-	def JsonDict(self):
-		return _MergeDicts(
-			super().JsonDict,
-			_CleanDict({
+				'minLimit': self.minlimit,
+				'maxLimit': self.maxlimit,
+				'minNorm': self.minnorm,
+				'maxNorm': self.maxnorm,
 				'default': self.defaultval,
+				'length': self.length,
+				'style': self.style,
+				'group': self.group,
 				'options': [o.JsonDict for o in self.options] if self.options else None,
+				'tags': self.tags,
 			}))
 
-
-class BoolParamSpec(ParamSpec):
-	def __init__(
-			self,
-			key,
-			label=None,
-			tags=None,
-			style=None,
-			group=None,
-			defaultval=None):
-		super().__init__(
-			key,
-			ParamType.bool,
-			label=label,
-			tags=tags,
-			style=style,
-			group=group)
-		self.defaultval = defaultval
-
-	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
-		self.defaultval = obj.get('default')
+class _BaseParentSchemaNode(_BaseSchemaNode):
+	def __init__(self, children=None):
+		self.children = children or []
 
 	@property
 	def JsonDict(self):
-		return _MergeDicts(
-			super().JsonDict,
-			_CleanDict({
-				'default': self.defaultval,
-			}))
+		raise NotImplementedError()
 
+	def GetChild(self, key):
+		return GetByKey(self.children, key)
 
-class NumberParamSpec(ParamSpec):
-	def __init__(
-			self,
-			key,
-			ptype,
-			label=None,
-			tags=None,
-			style=None,
-			group=None,
-			defaultval=None,
-			minlimit=None,
-			maxlimit=None,
-			minnorm=None,
-			maxnorm=None):
-		super().__init__(
-			key,
-			ptype,
-			label=label,
-			tags=tags,
-			style=style,
-			group=group)
-		self.defaultval = defaultval
-		self.minlimit = minlimit
-		self.maxlimit = maxlimit
-		self.minnorm = minnorm
-		self.maxnorm = maxnorm
+	def EvaluatePath(self, path):
+		if not path:
+			return
+		if '/' in path:
+			firstpart, rest = path.split('/', maxsplit=1)
+			m = self.GetChild(firstpart)
+			if not m:
+				return None
+			return m.EvaluatePath(rest)
+		else:
+			return self.GetChild(path)
 
-	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
-		self.defaultval = obj.get('default')
-		self.minlimit = obj.get('minLimit')
-		self.maxlimit = obj.get('maxLimit')
-		self.minnorm = obj.get('minNorm')
-		self.maxnorm = obj.get('maxNorm')
-
-	@property
-	def JsonDict(self):
-		return _MergeDicts(
-			super().JsonDict,
-			_CleanDict({
-				'default': self.defaultval,
-				'minLimit': self.minlimit,
-				'maxLimit': self.maxlimit,
-				'minNorm': self.minnorm,
-				'maxNorm': self.maxnorm,
-			}))
-
-class VectorParamSpec(ParamSpec):
-	def __init__(
-			self,
-			key,
-			ptype,
-			length=1,
-			label=None,
-			tags=None,
-			style=None,
-			group=None,
-			defaultval=None,
-			minlimit=None,
-			maxlimit=None,
-			minnorm=None,
-			maxnorm=None):
-		super().__init__(
-			key,
-			ptype,
-			label=label,
-			tags=tags,
-			style=style,
-			group=group)
-		self.length = length
-		self.defaultval = defaultval
-		self.minlimit = minlimit
-		self.maxlimit = maxlimit
-		self.minnorm = minnorm
-		self.maxnorm = maxnorm
-
-	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
-		self.length = obj['length']
-		self.defaultval = FillToLength(obj.get('default'), self.length)
-		self.minlimit = FillToLength(obj.get('minLimit'), self.length)
-		self.maxlimit = FillToLength(obj.get('maxLimit'), self.length)
-		self.minnorm = FillToLength(obj.get('minNorm'), self.length)
-		self.maxnorm = FillToLength(obj.get('maxNorm'), self.length)
-
-	@property
-	def JsonDict(self):
-		return _MergeDicts(
-			super().JsonDict,
-			_CleanDict({
-				'default': self.defaultval,
-				'minLimit': self.minlimit,
-				'maxLimit': self.maxlimit,
-				'minNorm': self.minnorm,
-				'maxNorm': self.maxnorm,
-			}))
-
-
-class ModuleSpec(_BaseSchemaNode):
+class ModuleSpec(_BaseParentSchemaNode):
 	def __init__(
 			self,
 			key,
@@ -345,17 +121,18 @@ class ModuleSpec(_BaseSchemaNode):
 			tags=None,
 			params=None,
 			children=None):
+		super().__init__(children=children)
 		self.key = key
 		self.label = label
 		self.moduletype = moduletype
 		self.group = group
 		self.tags = tags
-		self.params = params
-		self.children = children
+		self.params = params or []
+		self.children = children or []
 
 	@property
 	def JsonDict(self):
-		return _CleanDict({
+		return CleanDict({
 			'key': self.key,
 			'label': self.label,
 			'tags': self.tags,
@@ -365,23 +142,15 @@ class ModuleSpec(_BaseSchemaNode):
 			'children': [c.JsonDict for c in self.children] if self.children else None,
 		})
 
-	def _ReadProperties(self, obj):
-		self.label = obj.get('label')
-		self.moduletype = obj.get('moduleType')
-		self.group = obj.get('group')
-		self.tags = obj.get('tags')
-		paramobjs = obj.get('params')
-		childobjs = obj.get('children')
-		self.params = [ParamFromObj(o) for o in paramobjs] if paramobjs else None
-		self.children = [ModuleFromObj(o) for o in childobjs] if childobjs else None
+	def GetParam(self, key):
+		return GetByKey(self.params, key)
 
-def ModuleFromObj(obj):
-	key = obj['key']
-	module = ModuleSpec(key)
-	module._ReadProperties(obj)
-	return module
+	def EvaluatePath(self, path):
+		if path and path.startswith('@'):
+			return self.GetParam(path[1:])
+		return super().EvaluatePath(path)
 
-class AppSchema(_BaseSchemaNode):
+class AppSchema(_BaseParentSchemaNode):
 	def __init__(
 			self,
 			key,
@@ -397,7 +166,7 @@ class AppSchema(_BaseSchemaNode):
 
 	@property
 	def JsonDict(self):
-		return _CleanDict({
+		return CleanDict({
 			'key': self.key,
 			'label': self.label,
 			'tags': self.tags,
@@ -405,27 +174,3 @@ class AppSchema(_BaseSchemaNode):
 			'children': [c.JsonDict for c in self.children] if self.children else None,
 		})
 
-	def _ReadProperties(self, obj):
-		self.label = obj.get('label')
-		self.tags = obj.get('tags')
-		self.description = obj.get('description')
-		childobjs = obj.get('children')
-		self.children = [ModuleFromObj(o) for o in childobjs] if childobjs else None
-
-def AppFromObj(obj):
-	app = AppSchema(obj['key'])
-	app._ReadProperties(obj)
-	return app
-
-def _CleanDict(d):
-	for k in list(d.keys()):
-		if d[k] is None or d[k] == '':
-			del d[k]
-	return d
-
-def _MergeDicts(*parts):
-	d = dict()
-	if parts:
-		for part in parts:
-			d.update(part)
-	return d
