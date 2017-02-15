@@ -12,34 +12,29 @@ class ParamType(Enum):
 	fvec = 8
 	menu = 10
 	trigger = 11
+s
 
 
-class ParseException(Exception):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
+class _BaseSchemaNode:
+	@property
+	def JsonDict(self):
+		raise NotImplementedError()
+
+	def ToJson(self, **kwargs):
+		return json.dumps(self.JsonDict, **kwargs)
+
+	def __repr__(self):
+		return '%s(%r)' % (self.__class__.__name__, self.JsonDict)
 
 
-def _ParseParamType(str):
-	if not str:
-		return None
-	str = str.lower()
-	for t in ParamType:
-		if t.name == str:
-			return t
-	return None
-
-
-class ParamOption:
+class ParamOption(_BaseSchemaNode):
 	def __init__(self, key, label):
 		self.key = key
 		self.label = label
 
 	@property
-	def _JsonDict(self):
+	def JsonDict(self):
 		return {'key': self.key, 'label': self.label}
-
-	def ToJson(self):
-		return json.dumps(self._JsonDict)
 
 def _OptionFromObj(obj):
 	if not obj:
@@ -57,31 +52,7 @@ def _OptionsFromObj(obj):
 	return None
 
 
-class SpecNode:
-	def __init__(self,
-							 key,
-							 label=None,
-							 tags=None):
-		self.key = key
-		self.label = label
-		self.tags = tags
-
-	def _ReadProperties(self, obj):
-		self.label = obj.get('label')
-		self.tags = obj.get('tags')
-
-	@property
-	def _JsonDict(self):
-		return _CleanDict({
-			'key': self.key,
-			'label': self.label,
-			'tags': self.tags})
-
-	def ToJson(self):
-		return json.dumps(self._JsonDict)
-
-
-class ParamSpec(SpecNode):
+class ParamSpec(_BaseSchemaNode):
 	def __init__(
 			self,
 			key,
@@ -90,31 +61,29 @@ class ParamSpec(SpecNode):
 			tags=None,
 			style=None,
 			group=None):
-		super().__init__(
-			key,
-			label=label,
-			tags=tags)
+		self.key = key
+		self.label = label
 		self.ptype = ptype
 		self.style = style
 		self.group = group
+		self.tags = tags
 
 	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
+		self.label = obj.get('label')
 		self.style = obj.get('style')
 		self.group = obj.get('group')
+		self.tags = obj.get('tags')
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
+	def JsonDict(self):
+		return _CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'tags': self.tags,
 			'type': self.ptype.name,
 			'style': self.style,
 			'group': self.group,
-		}))
-		return obj
-
-	def __repr__(self):
-		return '%s(%r)' % (type(self).__name__, self._JsonDict)
+		})
 
 def ParamWithType(
 		key,
@@ -178,13 +147,13 @@ class OtherParamSpec(ParamSpec):
 				self.properties[key] = val
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
-			'otherType': self.othertype,
-		}))
-		obj.update(_CleanDict(self.properties))
-		return obj
+	def JsonDict(self):
+		return _MergeDicts(
+			super().JsonDict,
+			_CleanDict({
+				'otherType': self.othertype,
+			}),
+			_CleanDict(self.properties))
 
 
 class MenuOrStringParamSpec(ParamSpec):
@@ -214,13 +183,13 @@ class MenuOrStringParamSpec(ParamSpec):
 		self.options = _OptionsFromObj(obj.get('options'))
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
-			'default': self.defaultval,
-			'options': [o._JsonDict for o in self.options] if self.options else None,
-		}))
-		return obj
+	def JsonDict(self):
+		return _MergeDicts(
+			super().JsonDict,
+			_CleanDict({
+				'default': self.defaultval,
+				'options': [o.JsonDict for o in self.options] if self.options else None,
+			}))
 
 
 class BoolParamSpec(ParamSpec):
@@ -246,12 +215,12 @@ class BoolParamSpec(ParamSpec):
 		self.defaultval = obj.get('default')
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
-			'default': self.defaultval,
-		}))
-		return obj
+	def JsonDict(self):
+		return _MergeDicts(
+			super().JsonDict,
+			_CleanDict({
+				'default': self.defaultval,
+			}))
 
 
 class NumberParamSpec(ParamSpec):
@@ -290,16 +259,16 @@ class NumberParamSpec(ParamSpec):
 		self.maxnorm = obj.get('maxNorm')
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
-			'default': self.defaultval,
-			'minLimit': self.minlimit,
-			'maxLimit': self.maxlimit,
-			'minNorm': self.minnorm,
-			'maxNorm': self.maxnorm,
-		}))
-		return obj
+	def JsonDict(self):
+		return _MergeDicts(
+			super().JsonDict,
+			_CleanDict({
+				'default': self.defaultval,
+				'minLimit': self.minlimit,
+				'maxLimit': self.maxlimit,
+				'minNorm': self.minnorm,
+				'maxNorm': self.maxnorm,
+			}))
 
 class VectorParamSpec(ParamSpec):
 	def __init__(
@@ -340,19 +309,19 @@ class VectorParamSpec(ParamSpec):
 		self.maxnorm = FillToLength(obj.get('maxNorm'), self.length)
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
-			'default': self.defaultval,
-			'minLimit': self.minlimit,
-			'maxLimit': self.maxlimit,
-			'minNorm': self.minnorm,
-			'maxNorm': self.maxnorm,
-		}))
-		return obj
+	def JsonDict(self):
+		return _MergeDicts(
+			super().JsonDict,
+			_CleanDict({
+				'default': self.defaultval,
+				'minLimit': self.minlimit,
+				'maxLimit': self.maxlimit,
+				'minNorm': self.minnorm,
+				'maxNorm': self.maxnorm,
+			}))
 
 
-class ModuleSpec(SpecNode):
+class ModuleSpec(_BaseSchemaNode):
 	def __init__(
 			self,
 			key,
@@ -362,40 +331,35 @@ class ModuleSpec(SpecNode):
 			tags=None,
 			params=None,
 			children=None):
-		super().__init__(
-			key,
-			label=label,
-			tags=tags)
+		self.key = key
+		self.label = label
 		self.moduletype = moduletype
 		self.group = group
+		self.tags = tags
 		self.params = params
 		self.children = children
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
+	def JsonDict(self):
+		return _CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'tags': self.tags,
 			'moduleType': self.moduletype,
 			'group': self.group,
-			'params': [c._JsonDict for c in self.params] if self.params else None,
-			'children': [c._JsonDict for c in self.children] if self.children else None,
-		}))
-		return obj
+			'params': [c.JsonDict for c in self.params] if self.params else None,
+			'children': [c.JsonDict for c in self.children] if self.children else None,
+		})
 
 	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
+		self.label = obj.get('label')
 		self.moduletype = obj.get('moduleType')
 		self.group = obj.get('group')
+		self.tags = obj.get('tags')
 		paramobjs = obj.get('params')
 		childobjs = obj.get('children')
 		self.params = [ParamFromObj(o) for o in paramobjs] if paramobjs else None
 		self.children = [ModuleFromObj(o) for o in childobjs] if childobjs else None
-
-	def __repr__(self):
-		return 'ModuleSpec(%r)' % self._JsonDict
-
-	def ToJson(self):
-		return json.dumps(self._JsonDict)
 
 def ModuleFromObj(obj):
 	key = obj['key']
@@ -403,35 +367,36 @@ def ModuleFromObj(obj):
 	module._ReadProperties(obj)
 	return module
 
-class AppSchema(SpecNode):
-	def __init__(self, key, label=None, tags=None, description=None, children=None):
-		super().__init__(
+class AppSchema(_BaseSchemaNode):
+	def __init__(
+			self,
 			key,
-			label=label,
-			tags=tags)
+			label=None,
+			tags=None,
+			description=None,
+			children=None):
+		self.key = key
+		self.label = label
+		self.tags = tags
 		self.description = description
 		self.children = children or []
 
 	@property
-	def _JsonDict(self):
-		obj = super()._JsonDict
-		obj.update(_CleanDict({
+	def JsonDict(self):
+		return _CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'tags': self.tags,
 			'description': self.description,
-			'children': [c._JsonDict for c in self.children] if self.children else None,
-		}))
-		return obj
+			'children': [c.JsonDict for c in self.children] if self.children else None,
+		})
 
 	def _ReadProperties(self, obj):
-		super()._ReadProperties(obj)
+		self.label = obj.get('label')
+		self.tags = obj.get('tags')
 		self.description = obj.get('description')
 		childobjs = obj.get('children')
 		self.children = [ModuleFromObj(o) for o in childobjs] if childobjs else None
-
-	def __repr__(self):
-		return 'AppSchema(%r)' % self._JsonDict
-
-	def ToJson(self):
-		return json.dumps(self._JsonDict)
 
 def AppFromObj(obj):
 	app = AppSchema(obj['key'])
@@ -442,4 +407,11 @@ def _CleanDict(d):
 	for k in list(d.keys()):
 		if d[k] is None or d[k] == '':
 			del d[k]
+	return d
+
+def _MergeDicts(*parts):
+	d = dict()
+	if parts:
+		for part in parts:
+			d.update(part)
 	return d
