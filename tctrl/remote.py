@@ -4,11 +4,13 @@ from tctrl.model import *
 from tctrl.schema import *
 from tctrl.util import FillToLength
 
-class OscSender:
+class OscAccessor(Accessor):
 	def __init__(self, address, port):
+		super().__init__()
 		self.client = pythonosc.udp_client.UDPClient(address, port)
 
 	def SetParam(self, param, value):
+		super().SetParam(param, value)
 		message = self._BuildSetParamMessage(param, value)
 		if message is not None:
 			self.client.send(message)
