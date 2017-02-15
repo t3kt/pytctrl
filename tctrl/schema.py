@@ -158,11 +158,11 @@ class AppSchema(_BaseParentSchemaNode):
 			tags=None,
 			description=None,
 			children=None):
+		super().__init__(children=children)
 		self.key = key
 		self.label = label
 		self.tags = tags
 		self.description = description
-		self.children = children or []
 
 	@property
 	def JsonDict(self):
