@@ -14,6 +14,8 @@ def FillToLength(vals, length=None):
 	]
 
 def CleanDict(d):
+	if not d:
+		return None
 	for k in list(d.keys()):
 		if d[k] is None or d[k] == '':
 			del d[k]
