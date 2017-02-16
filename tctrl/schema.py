@@ -33,6 +33,35 @@ class ParamOption(_BaseSchemaNode):
 	def JsonDict(self):
 		return {'key': self.key, 'label': self.label}
 
+class ParamPartSpec(_BaseSchemaNode):
+	def __init__(self,
+	             key,
+	             label=None,
+	             minlimit=None,
+	             maxlimit=None,
+	             minnorm=None,
+	             maxnorm=None,
+	             defaultval=None):
+		self.key = key
+		self.label = label
+		self.minlimit = minlimit
+		self.maxlimit = maxlimit
+		self.minnorm = minnorm
+		self.maxnorm = maxnorm
+		self.defaultval = defaultval
+
+	@property
+	def JsonDict(self):
+		return CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'minLimit': self.minlimit,
+			'maxLimit': self.maxlimit,
+			'minNorm': self.minnorm,
+			'maxNorm': self.maxnorm,
+			'default': self.defaultval,
+		})
+
 class ParamSpec(_BaseSchemaNode):
 	def __init__(
 			self,
@@ -45,6 +74,7 @@ class ParamSpec(_BaseSchemaNode):
 			minnorm=None,
 			maxnorm=None,
 			defaultval=None,
+			parts=None,
 			length=None,
 			style=None,
 			group=None,
@@ -60,6 +90,7 @@ class ParamSpec(_BaseSchemaNode):
 		self.minnorm = minnorm
 		self.maxnorm = maxnorm
 		self.defaultval = defaultval
+		self.parts = parts
 		self.length = length
 		self.style = style
 		self.group = group
@@ -81,6 +112,7 @@ class ParamSpec(_BaseSchemaNode):
 				'minNorm': self.minnorm,
 				'maxNorm': self.maxnorm,
 				'default': self.defaultval,
+				'parts': [p.JsonDict for p in self.parts] if self.parts else None,
 				'length': self.length,
 				'style': self.style,
 				'group': self.group,
