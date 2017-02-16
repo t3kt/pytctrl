@@ -1,7 +1,6 @@
 # tctrl.parser
 
-from tctrl.util import FillToLength
-from tctrl.schema import ParamType, ParamOption, ParamSpec, ModuleSpec, AppSchema
+from tctrl.schema import ParamType, ParamOption, ParamPartSpec, ParamSpec, ModuleSpec, AppSchema
 
 class ParseException(Exception):
 	def __init__(self, *args, **kwargs):
@@ -30,6 +29,19 @@ def OptionFromObj(obj):
 def OptionsFromObj(obj):
 	return [OptionFromObj(o) for o in obj] if obj else None
 
+def ReadParamPartFromObj(obj):
+	if 'key' not in obj:
+		raise ParseException('Param part is missing key')
+	return ParamPartSpec(
+		obj['key'],
+		label=obj.get('label'),
+		defaultval=obj.get('default'),
+		minlimit=obj.get('minLimit'),
+		maxlimit=obj.get('maxLimit'),
+		minnorm=obj.get('minNorm'),
+		maxnorm=obj.get('maxNorm'),
+	)
+
 def ReadParamFromObj(obj):
 	if 'key' not in obj:
 		raise ParseException('Param is missing key')
@@ -37,7 +49,8 @@ def ReadParamFromObj(obj):
 		raise ParseException('Param is missing type')
 	typestr = obj['type']
 	ptype = ParseParamType(typestr) or ParamType.other
-	length = obj.get('length')
+	partobjs = obj.get('parts')
+	length = obj.get('length') or (len(partobjs) if partobjs else None) or 1
 	param = ParamSpec(obj['key'], ptype, length=length)
 	param.othertype = obj.get('otherType') or obj.get('type')
 	param.label = obj.get('label')
@@ -49,12 +62,7 @@ def ReadParamFromObj(obj):
 	param.maxlimit = obj.get('maxLimit')
 	param.minnorm = obj.get('minNorm')
 	param.maxnorm = obj.get('maxNorm')
-	if length and length > 0:
-		param.defaultval = FillToLength(param.defaultval, length)
-		param.minlimit = FillToLength(param.minlimit, length)
-		param.maxlimit = FillToLength(param.maxlimit, length)
-		param.minnorm = FillToLength(param.minnorm, length)
-		param.maxnorm = FillToLength(param.maxnorm, length)
+	param.parts = [ReadParamPartFromObj(p) for p in partobjs] if partobjs else None
 	param.options = OptionsFromObj(obj.get('options'))
 	param.properties = {}
 	for key, val in obj.items():
@@ -73,6 +81,7 @@ _KnownKeys = [
 	'minNorm',
 	'maxNorm',
 	'default',
+	'parts',
 	'length',
 	'style',
 	'group',
