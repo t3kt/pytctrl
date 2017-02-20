@@ -36,6 +36,7 @@ class ParamOption(_BaseSchemaNode):
 class ParamPartSpec(_BaseSchemaNode):
 	def __init__(self,
 	             key,
+	             path=None,
 	             label=None,
 	             minlimit=None,
 	             maxlimit=None,
@@ -43,6 +44,7 @@ class ParamPartSpec(_BaseSchemaNode):
 	             maxnorm=None,
 	             defaultval=None):
 		self.key = key
+		self.path = path
 		self.label = label
 		self.minlimit = minlimit
 		self.maxlimit = maxlimit
@@ -54,6 +56,7 @@ class ParamPartSpec(_BaseSchemaNode):
 	def JsonDict(self):
 		return CleanDict({
 			'key': self.key,
+			'path': self.path,
 			'label': self.label,
 			'minLimit': self.minlimit,
 			'maxLimit': self.maxlimit,
@@ -68,6 +71,7 @@ class ParamSpec(_BaseSchemaNode):
 			key,
 			label=None,
 			ptype=ParamType.other,
+			path=None,
 			othertype=None,
 			minlimit=None,
 			maxlimit=None,
@@ -84,6 +88,7 @@ class ParamSpec(_BaseSchemaNode):
 		self.key = key
 		self.label = label
 		self.ptype = ptype
+		self.path = path
 		self.othertype = othertype
 		self.minlimit = minlimit
 		self.maxlimit = maxlimit
@@ -104,6 +109,7 @@ class ParamSpec(_BaseSchemaNode):
 			CleanDict(self.properties),
 			CleanDict({
 				'key': self.key,
+				'path': self.path,
 				'label': self.label,
 				'type': self.ptype.name,
 				'otherType': self.othertype,
@@ -148,6 +154,7 @@ class ModuleSpec(_BaseParentSchemaNode):
 			self,
 			key,
 			label=None,
+			path=None,
 			moduletype=None,
 			group=None,
 			tags=None,
@@ -156,6 +163,7 @@ class ModuleSpec(_BaseParentSchemaNode):
 		super().__init__(children=children)
 		self.key = key
 		self.label = label
+		self.path = path
 		self.moduletype = moduletype
 		self.group = group
 		self.tags = tags
@@ -167,6 +175,7 @@ class ModuleSpec(_BaseParentSchemaNode):
 		return CleanDict({
 			'key': self.key,
 			'label': self.label,
+			'path': self.path,
 			'tags': self.tags,
 			'moduleType': self.moduletype,
 			'group': self.group,
@@ -192,6 +201,7 @@ class AppSchema(_BaseParentSchemaNode):
 			children=None):
 		super().__init__(children=children)
 		self.key = key
+		self.path = key
 		self.label = label
 		self.tags = tags
 		self.description = description
@@ -200,6 +210,7 @@ class AppSchema(_BaseParentSchemaNode):
 	def JsonDict(self):
 		return CleanDict({
 			'key': self.key,
+			'path': self.path,
 			'label': self.label,
 			'tags': self.tags,
 			'description': self.description,
