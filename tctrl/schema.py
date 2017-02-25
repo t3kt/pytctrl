@@ -201,7 +201,7 @@ class AppSchema(_BaseParentSchemaNode):
 			children=None):
 		super().__init__(children=children)
 		self.key = key
-		self.path = key
+		self.path = '/' + key
 		self.label = label
 		self.tags = tags
 		self.description = description
