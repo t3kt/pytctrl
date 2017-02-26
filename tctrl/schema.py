@@ -42,7 +42,8 @@ class ParamPartSpec(_BaseSchemaNode):
 	             maxlimit=None,
 	             minnorm=None,
 	             maxnorm=None,
-	             defaultval=None):
+	             defaultval=None,
+	             value=None):
 		self.key = key
 		self.path = path
 		self.label = label
@@ -51,6 +52,7 @@ class ParamPartSpec(_BaseSchemaNode):
 		self.minnorm = minnorm
 		self.maxnorm = maxnorm
 		self.defaultval = defaultval
+		self.value = value
 
 	@property
 	def JsonDict(self):
@@ -63,6 +65,7 @@ class ParamPartSpec(_BaseSchemaNode):
 			'minNorm': self.minnorm,
 			'maxNorm': self.maxnorm,
 			'default': self.defaultval,
+			'value': self.value,
 		})
 
 class ParamSpec(_BaseSchemaNode):
@@ -78,6 +81,8 @@ class ParamSpec(_BaseSchemaNode):
 			minnorm=None,
 			maxnorm=None,
 			defaultval=None,
+			value=None,
+			valueindex=None,
 			parts=None,
 			length=None,
 			style=None,
@@ -95,6 +100,8 @@ class ParamSpec(_BaseSchemaNode):
 		self.minnorm = minnorm
 		self.maxnorm = maxnorm
 		self.defaultval = defaultval
+		self.value = value
+		self.valueindex = valueindex
 		self.parts = parts
 		self.length = length
 		self.style = style
@@ -118,6 +125,8 @@ class ParamSpec(_BaseSchemaNode):
 				'minNorm': self.minnorm,
 				'maxNorm': self.maxnorm,
 				'default': self.defaultval,
+				'value': self.value,
+				'valueIndex': self.valueindex,
 				'parts': [p.JsonDict for p in self.parts] if self.parts else None,
 				'length': self.length,
 				'style': self.style,
