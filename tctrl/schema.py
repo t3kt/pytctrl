@@ -89,6 +89,10 @@ class ParamSpec(_BaseSchemaNode):
 			group=None,
 			options=None,
 			tags=None,
+			help=None,
+			offhelp=None,
+			buttontext=None,
+			buttonofftext=None,
 			properties=None):
 		self.key = key
 		self.label = label
@@ -108,6 +112,10 @@ class ParamSpec(_BaseSchemaNode):
 		self.group = group
 		self.options = options
 		self.tags = tags
+		self.help = help
+		self.offhelp = offhelp
+		self.buttontext = buttontext
+		self.buttonofftext = buttonofftext
 		self.properties = properties
 
 	@property
@@ -132,6 +140,10 @@ class ParamSpec(_BaseSchemaNode):
 				'style': self.style,
 				'group': self.group,
 				'options': [o.JsonDict for o in self.options] if self.options else None,
+				'help': self.help,
+				'offHelp': self.offhelp,
+				'buttonText': self.buttontext,
+				'buttonOffText': self.buttonofftext,
 				'tags': self.tags,
 			}))
 

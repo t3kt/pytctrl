@@ -17,7 +17,7 @@ def CleanDict(d):
 	if not d:
 		return None
 	for k in list(d.keys()):
-		if d[k] is None or d[k] == '':
+		if d[k] is None or d[k] == '' or (isinstance(d[k], list) and len(d[k]) == 0):
 			del d[k]
 	return d
 
