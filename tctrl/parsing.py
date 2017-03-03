@@ -36,6 +36,7 @@ def ReadParamPartFromObj(obj, pathprefix=None):
 		obj['key'],
 		label=obj.get('label'),
 		defaultval=obj.get('default'),
+		value=obj.get('value'),
 		minlimit=obj.get('minLimit'),
 		maxlimit=obj.get('maxLimit'),
 		minnorm=obj.get('minNorm'),
@@ -51,19 +52,23 @@ def ReadParamFromObj(obj, pathprefix=None):
 	typestr = obj['type']
 	ptype = ParseParamType(typestr) or ParamType.other
 	partobjs = obj.get('parts')
-	length = obj.get('length') or (len(partobjs) if partobjs else None) or 1
 	path = (pathprefix + obj['key']) if pathprefix else None
 	return ParamSpec(
 		obj['key'],
 		ptype=ptype,
 		path=path,
 		label=obj.get('label'),
-		length=length,
 		othertype=obj.get('otherType') or obj.get('type'),
 		style=obj.get('style'),
 		group=obj.get('group'),
 		tags=obj.get('tags'),
+		help=obj.get('help'),
+		offhelp=obj.get('offHelp'),
+		buttontext=obj.get('buttonText'),
+		buttonofftext=obj.get('buttonOffText'),
 		defaultval=obj.get('default'),
+		value=obj.get('value'),
+		valueindex=obj.get('valueIndex'),
 		minlimit=obj.get('minLimit'),
 		maxlimit=obj.get('maxLimit'),
 		minnorm=obj.get('minNorm'),
@@ -78,20 +83,25 @@ def ReadParamFromObj(obj, pathprefix=None):
 
 _KnownKeys = [
 	'key',
+	'path',
 	'label',
 	'type',
-	'length',
 	'otherType',
 	'minLimit',
 	'maxLimit',
 	'minNorm',
 	'maxNorm',
 	'default',
+	'value',
+	'valueIndex',
 	'parts',
-	'length',
 	'style',
 	'group',
 	'options',
+	'help',
+	'offHelp',
+	'buttonText',
+	'buttonOffText',
 	'tags',
 ]
 
