@@ -1,6 +1,6 @@
 # tctrl.parser
 
-from tctrl.schema import ParamType, ParamOption, ParamPartSpec, ParamSpec, ModuleSpec, AppSchema
+from tctrl.schema import ParamType, ParamOption, ParamPartSpec, ParamSpec, ModuleSpec, ConnectionInfo, AppSchema
 
 class ParseException(Exception):
 	def __init__(self, *args, **kwargs):
@@ -127,10 +127,20 @@ def ReadModuleFromObj(obj, pathprefix=None):
 			] if childobjs else None,
 	)
 
+def ReadConnectionFromObj(obj):
+	if 'type' not in obj:
+		raise ParseException('Connection is missing type')
+	return ConnectionInfo(
+		conntype=obj['type'],
+		host=obj.get('host'),
+		port=obj.get('port'),
+	)
+
 def ReadAppFromObj(obj):
 	if 'key' not in obj:
 		raise ParseException('App is missing key')
 	childobjs = obj.get('children')
+	connobjs = obj.get('connections')
 	childprefix = obj['key'] + '/'
 	return AppSchema(
 		obj['key'],
@@ -140,4 +150,7 @@ def ReadAppFromObj(obj):
 		children=[
 			ReadModuleFromObj(o, pathprefix=childprefix) for o in childobjs
 			] if childobjs else None,
+		connections=[
+			ReadConnectionFromObj(o) for o in connobjs
+			] if connobjs else None,
 	)

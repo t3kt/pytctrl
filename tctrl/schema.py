@@ -209,6 +209,23 @@ class ModuleSpec(_BaseParentSchemaNode):
 			return self.GetParam(path[1:])
 		return super().EvaluatePath(path)
 
+class ConnectionInfo(_BaseSchemaNode):
+	def __init__(self,
+	             conntype=None,
+	             host=None,
+	             port=None):
+		self.conntype = conntype
+		self.host = host
+		self.port = port
+
+	@property
+	def JsonDict(self):
+		return CleanDict({
+			'type': self.conntype,
+			'host': self.host,
+			'port': self.port,
+		})
+
 class AppSchema(_BaseParentSchemaNode):
 	def __init__(
 			self,
@@ -216,13 +233,15 @@ class AppSchema(_BaseParentSchemaNode):
 			label=None,
 			tags=None,
 			description=None,
-			children=None):
+			children=None,
+			connections=None):
 		super().__init__(children=children)
 		self.key = key
 		self.path = '/' + key
 		self.label = label
 		self.tags = tags
 		self.description = description
+		self.connections = connections
 
 	@property
 	def JsonDict(self):
@@ -233,5 +252,5 @@ class AppSchema(_BaseParentSchemaNode):
 			'tags': self.tags,
 			'description': self.description,
 			'children': [c.JsonDict for c in self.children] if self.children else None,
+			'connections': [c.JsonDict for c in self.connections] if self.connections else None,
 		})
-
