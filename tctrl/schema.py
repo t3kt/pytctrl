@@ -84,7 +84,6 @@ class ParamSpec(_BaseSchemaNode):
 			value=None,
 			valueindex=None,
 			parts=None,
-			length=None,
 			style=None,
 			group=None,
 			options=None,
@@ -107,7 +106,6 @@ class ParamSpec(_BaseSchemaNode):
 		self.value = value
 		self.valueindex = valueindex
 		self.parts = parts
-		self.length = length
 		self.style = style
 		self.group = group
 		self.options = options
@@ -136,7 +134,6 @@ class ParamSpec(_BaseSchemaNode):
 				'value': self.value,
 				'valueIndex': self.valueindex,
 				'parts': [p.JsonDict for p in self.parts] if self.parts else None,
-				'length': self.length,
 				'style': self.style,
 				'group': self.group,
 				'options': [o.JsonDict for o in self.options] if self.options else None,
