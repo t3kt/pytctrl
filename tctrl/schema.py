@@ -177,7 +177,9 @@ class ModuleSpec(_BaseParentSchemaNode):
 			group=None,
 			tags=None,
 			params=None,
-			children=None):
+			children=None,
+			paramgroups=None,
+			childgroups=None):
 		super().__init__(children=children)
 		self.key = key
 		self.label = label
@@ -187,6 +189,8 @@ class ModuleSpec(_BaseParentSchemaNode):
 		self.tags = tags
 		self.params = params or []
 		self.children = children or []
+		self.paramgroups = paramgroups or []
+		self.childgroups = childgroups or []
 
 	@property
 	def JsonDict(self):
@@ -197,6 +201,8 @@ class ModuleSpec(_BaseParentSchemaNode):
 			'tags': self.tags,
 			'moduleType': self.moduletype,
 			'group': self.group,
+			'paramGroups': self.paramgroups,
+			'childGroups': self.childgroups,
 			'params': [c.JsonDict for c in self.params] if self.params else None,
 			'children': [c.JsonDict for c in self.children] if self.children else None,
 		})
@@ -234,6 +240,7 @@ class AppSchema(_BaseParentSchemaNode):
 			tags=None,
 			description=None,
 			children=None,
+			childgroups=None,
 			connections=None):
 		super().__init__(children=children)
 		self.key = key
@@ -242,6 +249,7 @@ class AppSchema(_BaseParentSchemaNode):
 		self.tags = tags
 		self.description = description
 		self.connections = connections
+		self.childgroups = childgroups or []
 
 	@property
 	def JsonDict(self):
@@ -251,6 +259,7 @@ class AppSchema(_BaseParentSchemaNode):
 			'label': self.label,
 			'tags': self.tags,
 			'description': self.description,
+			'childGroups': self.childgroups,
 			'children': [c.JsonDict for c in self.children] if self.children else None,
 			'connections': [c.JsonDict for c in self.connections] if self.connections else None,
 		})
