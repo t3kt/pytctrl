@@ -232,6 +232,24 @@ class ConnectionInfo(_BaseSchemaNode):
 			'port': self.port,
 		})
 
+class GroupInfo(_BaseSchemaNode):
+	def __init__(
+		self,
+		key,
+		label=None,
+		tags=None):
+		self.key = key
+		self.label = label
+		self.tags = tags
+
+	@property
+	def JsonDict(self):
+		return CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'tags': self.tags,
+		})
+
 class AppSchema(_BaseParentSchemaNode):
 	def __init__(
 			self,
