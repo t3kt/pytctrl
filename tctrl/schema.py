@@ -201,8 +201,8 @@ class ModuleSpec(_BaseParentSchemaNode):
 			'tags': self.tags,
 			'moduleType': self.moduletype,
 			'group': self.group,
-			'paramGroups': self.paramgroups,
-			'childGroups': self.childgroups,
+			'paramGroups': [g.JsonDict for g in self.paramgroups] if self.paramgroups else None,
+			'childGroups': [g.JsonDict for g in self.childgroups] if self.childgroups else None,
 			'params': [c.JsonDict for c in self.params] if self.params else None,
 			'children': [c.JsonDict for c in self.children] if self.children else None,
 		})
@@ -277,7 +277,7 @@ class AppSchema(_BaseParentSchemaNode):
 			'label': self.label,
 			'tags': self.tags,
 			'description': self.description,
-			'childGroups': self.childgroups,
+			'childGroups': [g.JsonDict for g in self.childgroups] if self.childgroups else None,
 			'children': [c.JsonDict for c in self.children] if self.children else None,
 			'connections': [c.JsonDict for c in self.connections] if self.connections else None,
 		})
