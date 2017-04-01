@@ -13,6 +13,11 @@ class ParamType(Enum):
 	menu = 10
 	trigger = 11
 
+def _NodeListToJson(nodes):
+	if not nodes:
+		return None
+	return [n.JsonDict for n in nodes]
+
 class _BaseSchemaNode:
 	@property
 	def JsonDict(self):
@@ -133,10 +138,10 @@ class ParamSpec(_BaseSchemaNode):
 				'default': self.defaultval,
 				'value': self.value,
 				'valueIndex': self.valueindex,
-				'parts': [p.JsonDict for p in self.parts] if self.parts else None,
+				'parts': _NodeListToJson(self.parts),
 				'style': self.style,
 				'group': self.group,
-				'options': [o.JsonDict for o in self.options] if self.options else None,
+				'options': _NodeListToJson(self.options),
 				'help': self.help,
 				'offHelp': self.offhelp,
 				'buttonText': self.buttontext,
@@ -201,10 +206,10 @@ class ModuleSpec(_BaseParentSchemaNode):
 			'tags': self.tags,
 			'moduleType': self.moduletype,
 			'group': self.group,
-			'paramGroups': [g.JsonDict for g in self.paramgroups] if self.paramgroups else None,
-			'childGroups': [g.JsonDict for g in self.childgroups] if self.childgroups else None,
-			'params': [c.JsonDict for c in self.params] if self.params else None,
-			'children': [c.JsonDict for c in self.children] if self.children else None,
+			'paramGroups': _NodeListToJson(self.paramgroups),
+			'childGroups': _NodeListToJson(self.childgroups),
+			'params': _NodeListToJson(self.params),
+			'children': _NodeListToJson(self.children),
 		})
 
 	def GetParam(self, key):
@@ -277,7 +282,7 @@ class AppSchema(_BaseParentSchemaNode):
 			'label': self.label,
 			'tags': self.tags,
 			'description': self.description,
-			'childGroups': [g.JsonDict for g in self.childgroups] if self.childgroups else None,
-			'children': [c.JsonDict for c in self.children] if self.children else None,
-			'connections': [c.JsonDict for c in self.connections] if self.connections else None,
+			'childGroups': _NodeListToJson(self.childgroups),
+			'children': _NodeListToJson(self.children),
+			'connections': _NodeListToJson(self.connections),
 		})
