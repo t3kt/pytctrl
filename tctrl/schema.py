@@ -194,6 +194,30 @@ class _BaseParentSchemaNode(_BaseSchemaNode):
 		else:
 			return self.GetChild(path)
 
+class ModuleTypeSpec(_BaseSchemaNode):
+	def __init__(
+			self,
+			key,
+			label=None,
+			params=None,
+			paramgroups=None):
+		self.key = key
+		self.label = label
+		self.params = params or []
+		self.paramgroups = paramgroups or []
+
+	@property
+	def JsonDict(self):
+		return CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'paramGroups': _NodeListToJson(self.paramgroups),
+			'params': _NodeListToJson(self.params),
+		})
+
+	def GetParam(self, key):
+		return GetByKey(self.params, key)
+
 class ModuleSpec(_BaseParentSchemaNode):
 	def __init__(
 			self,
@@ -236,11 +260,6 @@ class ModuleSpec(_BaseParentSchemaNode):
 
 	def GetParam(self, key):
 		return GetByKey(self.params, key)
-
-	def EvaluatePath(self, path):
-		if path and path.startswith('@'):
-			return self.GetParam(path[1:])
-		return super().EvaluatePath(path)
 
 class ConnectionInfo(_BaseSchemaNode):
 	def __init__(self,
@@ -287,7 +306,8 @@ class AppSchema(_BaseParentSchemaNode):
 			children=None,
 			childgroups=None,
 			optionlists=None,
-			connections=None):
+			connections=None,
+			moduletypes=None):
 		super().__init__(children=children)
 		self.key = key
 		self.path = '/' + key
@@ -297,6 +317,7 @@ class AppSchema(_BaseParentSchemaNode):
 		self.connections = connections
 		self.childgroups = childgroups or []
 		self.optionlists = optionlists or []
+		self.moduletypes = moduletypes or []
 
 	@property
 	def JsonDict(self):
