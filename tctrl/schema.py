@@ -38,6 +38,23 @@ class ParamOption(_BaseSchemaNode):
 	def JsonDict(self):
 		return {'key': self.key, 'label': self.label}
 
+class OptionList(_BaseSchemaNode):
+	def __init__(self,
+							 key,
+							 label=None,
+							 options=None):
+		self.key = key
+		self.label = label
+		self.options = options or []
+
+	@property
+	def JsonDict(self):
+		return CleanDict({
+			'key': self.key,
+			'label': self.label,
+			'options': _NodeListToJson(self.options),
+		})
+
 class ParamPartSpec(_BaseSchemaNode):
 	def __init__(self,
 	             key,
@@ -92,6 +109,7 @@ class ParamSpec(_BaseSchemaNode):
 			style=None,
 			group=None,
 			options=None,
+			optionlist=None,
 			tags=None,
 			help=None,
 			offhelp=None,
@@ -114,6 +132,7 @@ class ParamSpec(_BaseSchemaNode):
 		self.style = style
 		self.group = group
 		self.options = options
+		self.optionlist = optionlist
 		self.tags = tags
 		self.help = help
 		self.offhelp = offhelp
@@ -142,6 +161,7 @@ class ParamSpec(_BaseSchemaNode):
 				'style': self.style,
 				'group': self.group,
 				'options': _NodeListToJson(self.options),
+				'optionList': self.optionlist,
 				'help': self.help,
 				'offHelp': self.offhelp,
 				'buttonText': self.buttontext,
@@ -264,6 +284,7 @@ class AppSchema(_BaseParentSchemaNode):
 			description=None,
 			children=None,
 			childgroups=None,
+			optionlists=None,
 			connections=None):
 		super().__init__(children=children)
 		self.key = key
@@ -273,6 +294,7 @@ class AppSchema(_BaseParentSchemaNode):
 		self.description = description
 		self.connections = connections
 		self.childgroups = childgroups or []
+		self.optionlists = optionlists or []
 
 	@property
 	def JsonDict(self):
@@ -285,4 +307,5 @@ class AppSchema(_BaseParentSchemaNode):
 			'childGroups': _NodeListToJson(self.childgroups),
 			'children': _NodeListToJson(self.children),
 			'connections': _NodeListToJson(self.connections),
+			'optionLists': _NodeListToJson(self.optionlists),
 		})
