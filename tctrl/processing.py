@@ -7,28 +7,51 @@ def WalkChildModules(node, action):
 			action(child, parent=node)
 			WalkChildModules(child, action)
 
-def EmbedParamOptionLists(appschema:AppSchema, striplists=True, onmissinglist=None):
+def ProcessAppSchema(appschema:AppSchema,
+										 embedlists=False,
+										 striplists=None,
+										 embedmoduletypes=False,
+										 stripmoduletypes=None,
+										 errorhandler=None):
+	if striplists is None:
+		striplists = embedlists
+	if stripmoduletypes is None:
+		stripmoduletypes = embedmoduletypes
+
 	appschema = copy.deepcopy(appschema)
 	optionlistsbykey = {
 		l.key: l for l in appschema.optionlists or []
-	}
-	if not optionlistsbykey:
-		return appschema
+		} if embedlists else {}
+
+	moduletypesbykey = {
+		t.key: t for t in appschema.moduletypes or []
+	} if embedmoduletypes else None
 
 	def _moduleAction(module:ModuleSpec, parent=None, **kwargs):
-		if module.params:
+		if embedmoduletypes and module.moduletype and module.moduletype in moduletypesbykey:
+			modtype = moduletypesbykey[module.moduletype]
+			if not module.params:
+				module.params = copy.deepcopy(modtype.params)
+			if not module.paramgroups:
+				module.paramgroups = copy.deepcopy(modtype.paramgroups)
+
+		if embedlists and optionlistsbykey:
 			for param in module.params:
 				if param.optionlist and not param.options:
 					if param.optionlist not in optionlistsbykey:
-						if onmissinglist:
-							onmissinglist(param.optionlist, param=param)
+						if errorhandler:
+							errorhandler.OnMissingList(param.optionlist, param=param)
 						continue
 					param.options = copy.deepcopy(optionlistsbykey[param.optionlist])
 
-	WalkChildModules(appschema, _moduleAction)
-
-	# TODO: implement...
-
 	if striplists:
 		appschema.optionlists = []
+	if stripmoduletypes:
+		appschema.moduletypes = []
+
 	return appschema
+
+class ErrorHandler:
+	def OnMissingList(self, param):
+		pass
+
