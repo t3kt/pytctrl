@@ -24,7 +24,9 @@ class _BaseSchemaNode:
 		raise NotImplementedError()
 
 	def ToJson(self, **kwargs):
-		return json.dumps(self.JsonDict, **kwargs)
+		dumpargs = {'sort_keys': True}
+		dumpargs.update(kwargs)
+		return json.dumps(self.JsonDict, **dumpargs)
 
 	def __repr__(self):
 		return '%s(%r)' % (self.__class__.__name__, self.JsonDict)
