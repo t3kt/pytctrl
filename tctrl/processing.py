@@ -42,7 +42,9 @@ def ProcessAppSchema(appschema:AppSchema,
 						if errorhandler:
 							errorhandler.OnMissingList(param.optionlist, param=param)
 						continue
-					param.options = copy.deepcopy(optionlistsbykey[param.optionlist])
+					param.options = copy.deepcopy(optionlistsbykey[param.optionlist].options)
+
+	WalkChildModules(appschema, _moduleAction)
 
 	if striplists:
 		appschema.optionlists = []

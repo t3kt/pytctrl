@@ -31,6 +31,11 @@ class _BaseSchemaNode:
 	def __repr__(self):
 		return '%s(%r)' % (self.__class__.__name__, self.JsonDict)
 
+	def __eq__(self, other):
+		if not isinstance(other, self.__class__):
+			return False
+		return self.__dict__ == other.__dict__
+
 class ParamOption(_BaseSchemaNode):
 	def __init__(self, key, label):
 		self.key = key
