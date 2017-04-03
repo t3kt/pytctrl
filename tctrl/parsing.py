@@ -1,6 +1,6 @@
 # tctrl.parser
 
-from tctrl.schema import ParamType, ParamOption, ParamPartSpec, ParamSpec, ModuleSpec, ConnectionInfo, AppSchema
+from tctrl.schema import ParamType, ParamOption, ParamPartSpec, ParamSpec, ModuleSpec, ConnectionInfo, AppSchema, ModuleTypeSpec, OptionList, GroupInfo
 
 class ParseException(Exception):
 	def __init__(self, *args, **kwargs):
@@ -26,8 +26,17 @@ def OptionFromObj(obj):
 	raise ParseException('Invalid ParamOption: %r' % obj)
 
 
-def OptionsFromObj(obj):
+def OptionsFromObjList(obj):
 	return [OptionFromObj(o) for o in obj] if obj else None
+
+def ReadOptionListFromObj(obj):
+	if 'key' not in obj:
+		raise ParseException('Option list is missing key')
+	return OptionList(
+		obj['key'],
+		label=obj.get('label'),
+		options=OptionsFromObjList(obj.get('options')),
+	)
 
 def ReadParamPartFromObj(obj, pathprefix=None):
 	if 'key' not in obj:
@@ -73,7 +82,7 @@ def ReadParamFromObj(obj, pathprefix=None):
 		maxlimit=obj.get('maxLimit'),
 		minnorm=obj.get('minNorm'),
 		maxnorm=obj.get('maxNorm'),
-		options=OptionsFromObj(obj.get('options')),
+		options=OptionsFromObjList(obj.get('options')),
 		parts=[
 			ReadParamPartFromObj(p, pathprefix=path)
 			for p in partobjs
@@ -122,9 +131,24 @@ def ReadModuleFromObj(obj, pathprefix=None):
 		params=[
 			ReadParamFromObj(o, pathprefix=childprefix) for o in paramobjs
 			] if paramobjs else None,
+		paramgroups=_GroupsFromObjs(obj.get('paramGroups')),
 		children=[
 			ReadModuleFromObj(o, pathprefix=childprefix) for o in childobjs
 			] if childobjs else None,
+		childgroups=_GroupsFromObjs(obj.get('childGroups')),
+	)
+
+def ReadModuleTypeFromObj(obj):
+	if 'key' not in obj:
+		raise ParseException('Module type is missing key')
+	paramobjs = obj.get('params')
+	return ModuleTypeSpec(
+		obj['key'],
+		label=obj.get('label'),
+		params=[
+			ReadParamFromObj(o, pathprefix=':') for o in paramobjs
+			] if paramobjs else None,
+		paramgroups=_GroupsFromObjs(obj.get('paramGroups')),
 	)
 
 def ReadConnectionFromObj(obj):
@@ -136,12 +160,28 @@ def ReadConnectionFromObj(obj):
 		port=obj.get('port'),
 	)
 
+def ReadGroupInfoFromObj(obj):
+	if 'key' not in obj:
+		raise ParseException('Group info is missing type')
+	return GroupInfo(
+		obj['key'],
+		label=obj.get('label'),
+		tags=obj.get('tags'),
+	)
+
+def _GroupsFromObjs(objs):
+	if not objs:
+		return None
+	return [ReadGroupInfoFromObj(o) for o in objs]
+
 def ReadAppFromObj(obj):
 	if 'key' not in obj:
 		raise ParseException('App is missing key')
 	childobjs = obj.get('children')
 	connobjs = obj.get('connections')
 	childprefix = obj['key'] + '/'
+	modtypeobjs = obj.get('moduleTypes')
+	optionlistobjs = obj.get('optionLists')
 	return AppSchema(
 		obj['key'],
 		label=obj.get('label'),
@@ -153,4 +193,10 @@ def ReadAppFromObj(obj):
 		connections=[
 			ReadConnectionFromObj(o) for o in connobjs
 			] if connobjs else None,
+		moduletypes=[
+			ReadModuleTypeFromObj(o) for o in modtypeobjs
+		] if modtypeobjs else None,
+		optionlists=[
+			ReadOptionListFromObj(o) for o in optionlistobjs
+		] if optionlistobjs else None,
 	)

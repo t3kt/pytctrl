@@ -173,7 +173,7 @@ class ParamSpec(_BaseSchemaNode):
 				'offHelp': self.offhelp,
 				'buttonText': self.buttontext,
 				'buttonOffText': self.buttonofftext,
-				'tags': self.tags,
+				'tags': _TagsToJsList(self.tags),
 			}))
 
 class _BaseParentSchemaNode(_BaseSchemaNode):
@@ -254,7 +254,7 @@ class ModuleSpec(_BaseParentSchemaNode):
 			'key': self.key,
 			'label': self.label,
 			'path': self.path,
-			'tags': self.tags,
+			'tags': _TagsToJsList(self.tags),
 			'moduleType': self.moduletype,
 			'group': self.group,
 			'paramGroups': _NodeListToJson(self.paramgroups),
@@ -298,7 +298,7 @@ class GroupInfo(_BaseSchemaNode):
 		return CleanDict({
 			'key': self.key,
 			'label': self.label,
-			'tags': self.tags,
+			'tags': _TagsToJsList(self.tags),
 		})
 
 class AppSchema(_BaseParentSchemaNode):
@@ -330,10 +330,16 @@ class AppSchema(_BaseParentSchemaNode):
 			'key': self.key,
 			'path': self.path,
 			'label': self.label,
-			'tags': self.tags,
+			'tags': _TagsToJsList(self.tags),
 			'description': self.description,
 			'childGroups': _NodeListToJson(self.childgroups),
 			'children': _NodeListToJson(self.children),
 			'connections': _NodeListToJson(self.connections),
 			'optionLists': _NodeListToJson(self.optionlists),
+			'moduleTypes': _NodeListToJson(self.moduletypes),
 		})
+
+def _TagsToJsList(tags):
+	if not tags:
+		return None
+	return sorted(tags)
