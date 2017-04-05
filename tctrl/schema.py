@@ -155,7 +155,7 @@ class ParamSpec(_BaseSchemaNode):
 				'key': self.key,
 				'path': self.path,
 				'label': self.label,
-				'type': self.ptype.name,
+				'type': self.ptype.name if self.ptype else None,
 				'otherType': self.othertype,
 				'minLimit': self.minlimit,
 				'maxLimit': self.maxlimit,

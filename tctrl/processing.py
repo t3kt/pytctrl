@@ -56,26 +56,35 @@ def _EmbedModuleTypes(appschema,
 			raise Exception('OMG MODULE HAS NO PATH: ' + repr(module))
 		if module.moduletype and module.moduletype in moduletypesbykey:
 			modtype = moduletypesbykey[module.moduletype]
+			instanceparamsbykey = {
+				p.key: p for p in module.params or []
+			}
 			if not module.params:
 				module.params = []
 				for masterparam in modtype.params:
-					# if not masterparam.path:
-					# 	raise Exception('OMG PARAM HAS NO PATH IN module ' + module.path + ' : ' + repr(masterparam))
-					param = _CreateParamFromMaster(masterparam, module)
+					param = _CreateParamFromMaster(masterparam, module, instanceparamsbykey.get(masterparam.key))
 					module.params.append(param)
 			if not module.paramgroups:
 				module.paramgroups = copy.deepcopy(modtype.paramgroups)
 	WalkChildModules(appschema, _moduleAction)
 
-def _CreateParamFromMaster(masterparam, module):
+def _CreateParamFromMaster(masterparam, module, instanceparam):
 	param = copy.deepcopy(masterparam)
 	if masterparam.path:
 		param.path = module.path + masterparam.path
 	else:
 		param.path = module.path + ':' + param.key
+	if instanceparam.value is not None:
+		param.value = instanceparam.value
+	if instanceparam.valueindex is not None:
+		param.valueindex = instanceparam.valueindex
 	if param.parts:
-		for part in param.parts:
+		for i, part in enumerate(param.parts):
 			part.path = param.path + param.key
+			if instanceparam.parts and i < len(instanceparam.parts):
+				instancepart = instanceparam.parts[i]
+				if instancepart.value is not None:
+					part.value = instancepart.value
 	return param
 
 def _EmbedSchemaLists(appschema,
