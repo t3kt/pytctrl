@@ -40,8 +40,8 @@ class _BaseSchemaNode:
 		return self.__dict__ == other.__dict__
 
 class ParamOption(_BaseSchemaNode):
-	"""A selectable option for a menu parameter or a string parameter
-	that provides a set of suggested options."""
+	"""A selectable option for a menu parameter or a string parameter that
+	provides a set of suggested options."""
 	
 	def __init__(self, key, label):
 		self.key = key
@@ -52,9 +52,9 @@ class ParamOption(_BaseSchemaNode):
 		return {'key': self.key, 'label': self.label}
 
 class OptionList(_BaseSchemaNode):
-	"""A named list of ParamOptions include in an AppSchema which
-	a ParamSpec can reference as an alternative to specifying options
-	directly in the parameter schema."""
+	"""A named list of ParamOptions include in an AppSchema which a ParamSpec
+	can reference as an alternative to specifying options directly in the
+	parameter schema."""
 	
 	def __init__(self,
 							 key,
@@ -111,7 +111,7 @@ class ParamPartSpec(_BaseSchemaNode):
 
 class ParamSpec(_BaseSchemaNode):
 	"""Defines a controllable parameter of a ModuleSpec. The parameter's
-	type (see ParamType) defines which fields of the ParamSpec are used."""
+	ParamType defines which fields of the ParamSpec are used."""
 	
 	def __init__(
 			self,
@@ -139,28 +139,67 @@ class ParamSpec(_BaseSchemaNode):
 			buttonofftext=None,
 			properties=None):
 		self.key = key
+		
 		self.label = label
 		self.ptype = ptype
 		self.path = path
 		self.othertype = othertype
+		
 		self.minlimit = minlimit
+		"""Minimum (inclusive) bound for a numeric parameter. If specified, the
+		target application will not permit values below the specified value. If
+		not specified, the parameter has no minimum value."""
+		
 		self.maxlimit = maxlimit
+		"""Maximum (inclusive) bound for a numeric parameter. If specified, the
+		target application will not permit values above the specified value. If
+		not specified, the parameter has no maximum value."""
+		
 		self.minnorm = minnorm
+		"""Minimum expected value for numeric parameter. The parameter may still
+		permit values below this minimum. This is typically used for things like
+		the range of a slider bound to this parameter. Control applications may
+		require this field to be specififed for all numeric parameters."""
+		
 		self.maxnorm = maxnorm
+		"""Maximum expected value for numeric parameter. The parameter may still
+		permit values above this maximum. This is typically used for things like
+		the range of a slider bound to this parameter. Control applications may
+		require this field to be specififed for all numeric parameters."""
+		
 		self.defaultval = defaultval
 		self.value = value
 		self.valueindex = valueindex
 		self.parts = parts
 		self.style = style
 		self.group = group
+		
 		self.options = options
+		"""A list of ParamOptions that define the available options for a menu
+		parameter, or an optional set of suggested values for a string
+		parameter. Parameters that are not menus or strings do not use this
+		field."""
+		
 		self.optionlist = optionlist
+		"""The name of an OptionList defined in the AppSchema. This can be used
+		as an alternative to specifying the options field directly. If the name
+		does not correspond to an OptionList in the AppSchema, control
+		applications may treat this as an error, or may just treat the parameter
+		as having no available options."""
+		
 		self.tags = tags
+		"""An optional set of string tags that indicate supplemental information
+		about a parameter. For example, it could indicate that a parameter is
+		an 'advanced' parameter, or that it should not support MIDI mapping."""
+		
 		self.help = help
 		self.offhelp = offhelp
 		self.buttontext = buttontext
 		self.buttonofftext = buttonofftext
+		
 		self.properties = properties
+		"""An optional dict of arbitrary additional attributes. This is
+		typically used for unrecognized fields when parsing from JSON."""
 
 	@property
 	def JsonDict(self):
@@ -215,9 +254,9 @@ class _BaseParentSchemaNode(_BaseSchemaNode):
 			return self.GetChild(path)
 
 class ModuleTypeSpec(_BaseSchemaNode):
-	"""Defines a type of module which is included in an AppSchema and can
-	be referenced by a ModuleSpec as an alternative to directly including
-	full schema information about its parameters."""
+	"""Defines a type of module which is included in an AppSchema and can be
+	referenced by a ModuleSpec as an alternative to directly including full
+	schema information about its parameters."""
 	
 	def __init__(
 			self,
@@ -246,8 +285,8 @@ class ModuleSpec(_BaseParentSchemaNode):
 	"""Defines a module in an AppSchema that handles some arbitrary behavior in
 	the target app, and has a set of parameters which control that behvior. A
 	module can either specify the full details of its parameters directly in the
-	ModuleSpec or it can refer to a named ModuleTypeSpec defined elsewhere in the
-	containing AppSchema."""
+	ModuleSpec or it can refer to a named ModuleTypeSpec defined elsewhere in
+	the containing AppSchema."""
 	
 	def __init__(
 			self,
@@ -315,7 +354,8 @@ class ConnectionInfo(_BaseSchemaNode):
 
 class GroupInfo(_BaseSchemaNode):
 	"""Defines metadata about a grouping of elements. Groups can either apply
-	to parameters of ModuleSpec or to child modules in a ModuleSpec or AppSchema."""
+	to parameters of ModuleSpec or to child modules in a ModuleSpec or
+	AppSchema."""
 	def __init__(
 		self,
 		key,
@@ -335,9 +375,9 @@ class GroupInfo(_BaseSchemaNode):
 
 class AppSchema(_BaseParentSchemaNode):
 	"""Defines the schema of a full application. Functionality is grouped into a
-	set of hierarchical modules. The AppSchema also contains general metadata about
-	the application as a whole, such as how to communicate with it and how to
-	represent it in a controller application."""
+	set of hierarchical modules. The AppSchema also contains general metadata
+	about the application as a whole, such as how to communicate with it and how
+	to represent it in a controller application."""
 	def __init__(
 			self,
 			key,
@@ -357,8 +397,18 @@ class AppSchema(_BaseParentSchemaNode):
 		self.description = description
 		self.connections = connections
 		self.childgroups = childgroups or []
+		
 		self.optionlists = optionlists or []
+		"""A list of OptionLists which can be referenced by ParamSpecs within
+		the AppSchema. Note that this is a list rather than a dict, but that the
+		OptionLists in the list should have unique values in their key
+		fields."""
+		
 		self.moduletypes = moduletypes or []
+		"""A list of ModuleTypeSpecs which can be referenced by ModuleSpecs
+		within the AppSchema. Note that this is a list rather than a dict, but
+		that the ModuleTypeSpecs in the list should have unique values in their
+		key fields."""
 
 	@property
 	def JsonDict(self):
