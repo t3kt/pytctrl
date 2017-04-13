@@ -3,6 +3,9 @@ import json
 from tctrl.util import CleanDict, MergeDicts, GetByKey
 
 class ParamType(Enum):
+	"""The type of a parameter, which indicates what kind of value(s)
+	it contains and how it is structured and handled."""
+	
 	other = 1
 	bool = 3
 	string = 4
@@ -37,6 +40,9 @@ class _BaseSchemaNode:
 		return self.__dict__ == other.__dict__
 
 class ParamOption(_BaseSchemaNode):
+	"""A selectable option for a menu parameter or a string parameter
+	that provides a set of suggested options."""
+	
 	def __init__(self, key, label):
 		self.key = key
 		self.label = label
@@ -46,6 +52,10 @@ class ParamOption(_BaseSchemaNode):
 		return {'key': self.key, 'label': self.label}
 
 class OptionList(_BaseSchemaNode):
+	"""A named list of ParamOptions include in an AppSchema which
+	a ParamSpec can reference as an alternative to specifying options
+	directly in the parameter schema."""
+	
 	def __init__(self,
 							 key,
 							 label=None,
@@ -63,6 +73,8 @@ class OptionList(_BaseSchemaNode):
 		})
 
 class ParamPartSpec(_BaseSchemaNode):
+	"""A part of a multi-part ParamSpec (ivec or fvec)."""
+	
 	def __init__(self,
 	             key,
 	             path=None,
@@ -98,6 +110,9 @@ class ParamPartSpec(_BaseSchemaNode):
 		})
 
 class ParamSpec(_BaseSchemaNode):
+	"""Defines a controllable parameter of a ModuleSpec. The parameter's
+	type (see ParamType) defines which fields of the ParamSpec are used."""
+	
 	def __init__(
 			self,
 			key,
@@ -200,6 +215,10 @@ class _BaseParentSchemaNode(_BaseSchemaNode):
 			return self.GetChild(path)
 
 class ModuleTypeSpec(_BaseSchemaNode):
+	"""Defines a type of module which is included in an AppSchema and can
+	be referenced by a ModuleSpec as an alternative to directly including
+	full schema information about its parameters."""
+	
 	def __init__(
 			self,
 			key,
@@ -224,6 +243,12 @@ class ModuleTypeSpec(_BaseSchemaNode):
 		return GetByKey(self.params, key)
 
 class ModuleSpec(_BaseParentSchemaNode):
+	"""Defines a module in an AppSchema that handles some arbitrary behavior in
+	the target app, and has a set of parameters which control that behvior. A
+	module can either specify the full details of its parameters directly in the
+	ModuleSpec or it can refer to a named ModuleTypeSpec defined elsewhere in the
+	containing AppSchema."""
+	
 	def __init__(
 			self,
 			key,
@@ -267,6 +292,11 @@ class ModuleSpec(_BaseParentSchemaNode):
 		return GetByKey(self.params, key)
 
 class ConnectionInfo(_BaseSchemaNode):
+	"""Defines an available mode of communication with the target app, such as
+	OSC input or output. Each type and direction of communication is defined by
+	its own ConnectionInfo. So an OSC input port would be defined in a separate
+	ConnectionInfo than an OSC output port."""
+	
 	def __init__(self,
 	             conntype=None,
 	             host=None,
@@ -284,6 +314,8 @@ class ConnectionInfo(_BaseSchemaNode):
 		})
 
 class GroupInfo(_BaseSchemaNode):
+	"""Defines metadata about a grouping of elements. Groups can either apply
+	to parameters of ModuleSpec or to child modules in a ModuleSpec or AppSchema."""
 	def __init__(
 		self,
 		key,
@@ -302,6 +334,10 @@ class GroupInfo(_BaseSchemaNode):
 		})
 
 class AppSchema(_BaseParentSchemaNode):
+	"""Defines the schema of a full application. Functionality is grouped into a
+	set of hierarchical modules. The AppSchema also contains general metadata about
+	the application as a whole, such as how to communicate with it and how to
+	represent it in a controller application."""
 	def __init__(
 			self,
 			key,
