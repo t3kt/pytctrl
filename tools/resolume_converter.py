@@ -35,7 +35,17 @@ class ResolumeConverter:
 		return app
 
 	def _ConvertCompositionMaster(self, compositionelem: ET.Element):
-		pass
+		path = 'composition'
+		module = ModuleSpec(
+			'master',
+			label='Composition Master',
+			moduletype='composition',
+			path=path,
+		)
+		effects = compositionelem.findall('./videoEngine/effects/effect')
+		for i, effect in enumerate(effects):
+			module.children.append(self._ConvertEffect(effect, path, 'effect%d' % i))
+		return module
 
 	def _ConvertLayer(self, layerelem: ET.Element):
 		layernum = int(layerelem.attrib['layerIndex'])
