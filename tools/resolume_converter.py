@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 from tctrl.schema import *
 import sys
+from bs4 import BeautifulSoup
 
 #
 # Example osc mappings
@@ -16,12 +17,62 @@ import sys
 # /composition/video/effect5/param2/values (Float 0.0 - 1.0)
 #
 
-class ResolumeConverter:
-	def __init__(self, root: ET.ElementTree):
-		self.root = root
+class ResolumeSoupConverter:
+	def __init__(self, compfilepath):
+		self.soup = BeautifulSoup(open(compfilepath), 'xml')
 
 	def ConvertToSchema(self):
-		compname = self.root.find('./composition/generalInfo').attrib['name']
+		compname = self.soup.composition.generalInfo['name']
+		key = compname.replace(' ', '')
+		app = AppSchema(
+			key=key,
+			label=compname,
+			tags=['resolume'],
+		)
+		app.children.append(self._BuildCompositionMaster(self.soup.composition))
+		for layer in self.soup.composition.find_all('layer', recursive=False):
+			app.children.append(self._BuildLayer(layer))
+		return app
+
+	def _BuildCompositionMaster(self, composition: BeautifulSoup):
+		module = ModuleSpec(
+			'composition',
+			label='Composition Master',
+			moduletype='composition',
+			path='/composition'
+		)
+		return module
+
+	def _BuildLayer(self, layer: BeautifulSoup):
+		layerIndex = int(layer['layerIndex'])
+		module = ModuleSpec(
+			'layer%d' % layerIndex,
+			label=layer.settings.find('name', recursive=False)['value'],
+			path='/layer%d' % layerIndex,
+			moduletype='layer',
+		)
+		effects = layer.effects
+		if effects is not None:
+			for i, effect in enumerate(effects.find_all('effect', recursive=False)):
+				module.children.append(self._BuildEffect(effect, 'effect%d' % (i + 1), basepath=module.path + '/'))
+		return module
+
+	def _BuildEffect(self, effect: BeautifulSoup, key: str, basepath: str):
+		module = ModuleSpec(
+			key,
+			path=basepath + key,
+			label=effect['name'],
+			moduletype=effect['fileName'],
+		)
+		return module
+
+
+class ResolumeConverter:
+	def __init__(self, compfilepath):
+		self.root = ET.parse(compfilepath).getroot()
+
+	def ConvertToSchema(self):
+		compname = self.root.findtext('generalInfo/@name')
 		app = AppSchema(
 			key=compname,
 			label=compname,
@@ -125,12 +176,21 @@ class ResolumeConverter:
 		return module
 
 	def _ConvertParameter(self, paramelem: ET.Element, path: str, key: str):
-		pass
+		param = ParamSpec(
+			key,
+			label=paramelem.findtext('./nameGiven/@value'),
+			ptype=ParamType.float,
+			path=path,
+			minnorm=float(paramelem.findtext('./values/@startValue', default='0')),
+			maxnorm=float(paramelem.findtext('./values/@endValue', default='1')),
+			defaultval=float(paramelem.findtext('./values/@defaultValue', default='0')),
+			value=float(paramelem.findtext('./values/@curValue', default='0')),
+		)
+		return param
 
 def main(args):
 	compfilepath = args[1]
-	root = ET.parse(compfilepath)
-	converter = ResolumeConverter(root)
+	converter = ResolumeSoupConverter(compfilepath)
 	schema = converter.ConvertToSchema()
 	schemajson = schema.ToJson(indent='  ')
 	print(schemajson)
