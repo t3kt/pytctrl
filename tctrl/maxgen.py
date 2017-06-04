@@ -55,7 +55,7 @@ class MaxPatchBuilder:
 		self.lines = []
 		self.template = template if template is not None else _defaultTemplate
 
-	def AddBox(self, box):
+	def AddBox(self, **box):
 		if not box.get('id'):
 			box['id'] = self.objectidgen.Next()
 		self.boxes[box['id']] = box
@@ -85,3 +85,12 @@ class _IdGenerator:
 	def Next(self):
 		self.i += 1
 		return '%s%d' % (self.prefix, self.i)
+
+def JParameter(
+		name,
+		type,
+		value=None,
+		description=None,
+		clipmode=None,
+		dataspace=None, priority=None):
+	pass
